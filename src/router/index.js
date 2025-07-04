@@ -6,7 +6,7 @@ import EditAlbum from '../views/EditAlbum.vue'
 import SharedAlbums from '../views/SharedAlbums.vue'
 import Login from '../views/Login.vue'
 import Profile from '../views/Profile.vue'
-import store from '../index.js'
+import store from '../store'
 
 const routes = [
     { path: '/', redirect: '/albums' },
