@@ -1,4 +1,7 @@
 <template>
+
+  <router-view v-if="$route.path === '/login'"></router-view>
+
   <div class="min-h-screen bg-gray-50 flex">
     <!-- 左侧导航栏 -->
     <div class="w-64 bg-white shadow-md flex flex-col fixed h-full">
@@ -13,6 +16,9 @@
                 class="block px-4 py-3 hover:bg-indigo-50 text-gray-700 flex items-center"
                 :class="{ 'bg-indigo-50 text-indigo-600': $route.path.includes('/albums') }"
             >
+              <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"></path>
+              </svg>
               我的相册
             </router-link>
           </li>
@@ -22,6 +28,9 @@
                 class="block px-4 py-3 hover:bg-indigo-50 text-gray-700 flex items-center"
                 :class="{ 'bg-indigo-50 text-indigo-600': $route.path === '/shared' }"
             >
+              <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path>
+              </svg>
               共享相册
             </router-link>
           </li>
@@ -80,8 +89,6 @@ export default {
         return '相册详情'
       } else if (route.path === '/album/create') {
         return '创建相册'
-      } else if (route.path.startsWith('/album/edit/')) {
-        return '编辑相册'
       } else if (route.path === '/profile') {
         return '个人资料'
       } else {
