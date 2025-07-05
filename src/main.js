@@ -1,19 +1,18 @@
 import { createApp } from 'vue'
 import App from './App.vue'
-import router from './router/router.js'
-import store from './store/store.js'
+import router from './router'
+import store from './store'
 
 import './assets/tailwind.css'
 
-// 创建Vue实例前直接初始化store
-store.dispatch('initialize').then(() => {
-    console.log("create app")
-    const app = createApp(App)
+const app = createApp(App)
 
-    app.use(store)
-    app.use(router)
+app.use(store)
+app.use(router)
 
+store.dispatch('user/initialize').then(() => {
     app.mount('#app')
-
-    store.dispatch('initialize')
+}).catch(error => {
+    console.error('初始化失败:', error)
+    app.mount('#app') // 即使失败也挂载应用
 })

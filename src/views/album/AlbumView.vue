@@ -72,14 +72,6 @@
       </div>
     </div>
 
-    <!-- 共享模态框 -->
-    <ShareForm
-        v-if="showShareModal"
-        :album="album"
-        @close="showShareModal = false"
-        @share="shareAlbum"
-    />
-
     <AlbumForm
         v-if="showEditModal"
         :initialData="album"
@@ -113,11 +105,11 @@
 </template>
 
 <script>
-import { computed, onMounted, ref } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
+import { ref, onMounted } from 'vue'
+import { useRouter } from 'vue-router'
 import { useStore } from 'vuex'
-import ShareForm from '../components/ShareForm.vue'
-import AlbumForm from '../components/AlbumForm.vue'
+import ShareForm from '@/components/album/ShareForm.vue'
+import AlbumForm from '@/components/album/AlbumForm.vue'
 import albumApi from '@/api/album'
 
 export default {
@@ -133,20 +125,19 @@ export default {
   },
   setup(props) {
     const store = useStore()
-    const route = useRoute()
     const router = useRouter()
     const album = ref(null)
     const loading = ref(true)
     const showShareModal = ref(false)
     const showDeleteModal = ref(false)
     const showEditModal = ref(false)
-    const saving = ref(false)
+    const albumData = ref({})
+    const updating = ref(false) // 添加加载状态
 
     onMounted(async () => {
       try {
         const response = await albumApi.getAlbumDetail(props.albumId)
         album.value = response.data.data
-        console.log("相册详情：",album.value)
       } catch (error) {
         console.error('获取相册详情失败', error)
       } finally {
@@ -161,6 +152,11 @@ export default {
     }
 
     const editAlbum = () => {
+      albumData.value = {
+        name: album.value.name,
+        description: album.value.description,
+        isPublic: album.value.isPublic
+      }
       showEditModal.value = true
     }
 
@@ -170,7 +166,7 @@ export default {
 
     const deleteAlbum = async () => {
       try {
-        await store.dispatch('deleteAlbum', album.value.albumId)
+        await store.dispatch('album/deleteAlbum', album.value.albumId)
         await router.push('/albums')
       } catch (error) {
         console.error('删除相册失败', error)
@@ -181,28 +177,35 @@ export default {
 
     const shareAlbum = async (shareData) => {
       try {
-        await store.dispatch('shareAlbum', { albumId: album.value.albumId, shareData })
+        await store.dispatch('album/shareAlbum', {
+          albumId: album.value.albumId,
+          shareData
+        })
         showShareModal.value = false
-        // 显示成功消息
       } catch (error) {
         console.error('共享相册失败', error)
       }
     }
 
     const updateAlbum = async (formData) => {
-      saving.value = true
+      updating.value = true // 开始加载
       try {
-        // 调用API更新相册
-        console.error('更新相册请求id1:', album.value.id)
-        const response = await albumApi.updateAlbum(album.value.albumId, formData)
+        await store.dispatch('album/updateAlbum', {
+          albumId: props.albumId,
+          data: formData
+        })
 
         // 更新本地数据
-        album.value = { ...album.value, ...formData }
+        album.value = {
+          ...album.value,
+          ...formData
+        }
+
         showEditModal.value = false
       } catch (error) {
-        console.error('更新相册失败', error)
+        console.error('更新相册信息失败', error)
       } finally {
-        saving.value = false
+        updating.value = false // 结束加载
       }
     }
 
@@ -211,6 +214,7 @@ export default {
       loading,
       showShareModal,
       showDeleteModal,
+      showEditModal,
       formatDate,
       editAlbum,
       updateAlbum,

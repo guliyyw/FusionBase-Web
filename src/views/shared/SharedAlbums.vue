@@ -33,7 +33,7 @@
 import { computed, onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { useStore } from 'vuex'
-import AlbumCard from '../components/AlbumCard.vue'
+import AlbumCard from '../../components/album/AlbumCard.vue'
 
 export default {
   components: {

@@ -16,7 +16,7 @@
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { useStore } from 'vuex'
-import AlbumForm from '../components/AlbumForm.vue'
+import AlbumForm from '../../components/album/AlbumForm.vue'
 
 export default {
   components: {

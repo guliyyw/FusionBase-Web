@@ -114,22 +114,10 @@ export default {
 
       try {
         if (isLogin.value) {
-          await store.dispatch('login', {
-            email: form.value.email,
-            password: form.value.password
-          })
+          await store.dispatch('user/login', form.value)
         } else {
-          // 注册成功后自动登录
-          await store.dispatch('register', {
-            email: form.value.email,
-            password: form.value.password
-          })
-          await store.dispatch('login', {
-            email: form.value.email,
-            password: form.value.password
-          })
+          await store.dispatch('user/register', form.value)
         }
-        // 登录成功后重定向到相册页面
         router.push('/albums')
       } catch (err) {
         error.value = isLogin.value

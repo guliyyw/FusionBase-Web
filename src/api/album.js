@@ -17,7 +17,7 @@ export default {
         return apiClient.get(`/album/${albumId}`, albumId)
     },
     deleteAlbum(albumId) {
-        return apiClient.post(`/album/${albumId}/share`, shareData)
+        return apiClient.delete(`/album/${albumId}`, albumId)
     },
     shareAlbum(albumId, shareData) {
         return apiClient.post(`/album/${albumId}/share`, shareData)
