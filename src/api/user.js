@@ -1,18 +1,16 @@
-import axios from 'axios'
-
-const API_URL = 'http://127.0.0.1:8080'
+import apiClient from './apiClient'
 
 export default {
     getUserInfo() {
-        return axios.get(`${API_URL}/user/me`)
+        return apiClient.get('/user/me')
     },
     updateUserInfo(userData) {
-        return axios.put(`${API_URL}/user/me`, userData)
+        return apiClient.put('/user/me', userData)
     },
     register(userData) {
-        return axios.post(`${API_URL}/user/register`, userData)
+        return apiClient.post('/user/register', userData)
     },
     login(credentials) {
-        return axios.post(`${API_URL}/user/login`, credentials)
+        return apiClient.post('/user/login', credentials)
     }
 }

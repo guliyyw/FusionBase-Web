@@ -23,7 +23,7 @@ export default {
     AlbumForm
   },
   props: {
-    id: {
+    albumId: {
       type: [String, Number],
       required: true
     }
@@ -41,7 +41,7 @@ export default {
     // 加载相册数据
     onMounted(async () => {
       try {
-        const album = store.getters.albumById(props.id)
+        const album = store.getters.albumById(props.albumId)
         if (album) {
           albumData.value = {
             name: album.name,
@@ -50,7 +50,7 @@ export default {
           }
         } else {
           // 如果store中没有，则从API获取
-          const response = await albumApi.getAlbumDetail(props.id)
+          const response = await albumApi.getAlbumDetail(props.albumId)
           albumData.value = {
             name: response.data.data.name,
             description: response.data.data.description,
@@ -67,10 +67,11 @@ export default {
       loading.value = true
       try {
         await store.dispatch('updateAlbum', {
-          id: props.id,
-          albumData
+          albumId: props.albumId,
+          data: albumData
         })
-        router.push(`/album/${props.id}`)
+        console.log(props.albumId)
+        await router.push(`/album/${props.albumId}`)
       } catch (error) {
         console.error('更新相册失败', error)
       } finally {

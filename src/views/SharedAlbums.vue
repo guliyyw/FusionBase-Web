@@ -22,7 +22,7 @@
             v-for="album in sharedAlbums"
             :key="album.albumId"
             :album="album"
-            @view="viewAlbum"
+            @view="viewAlbum(album.albumId)"
         />
       </div>
     </div>

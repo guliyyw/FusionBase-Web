@@ -1,23 +1,25 @@
 <template>
-  <div class="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
-    <div class="max-w-md w-full space-y-8">
-      <div>
-        <img class="mx-auto h-12 w-auto" src="https://tailwindui.com/img/logos/workflow-mark-indigo-600.svg" alt="Workflow">
-        <h2 class="mt-6 text-center text-3xl font-extrabold text-gray-900">
-          {{ isLogin ? '登录您的账户' : '创建新账户' }}
-        </h2>
-        <p class="mt-2 text-center text-sm text-gray-600">
-          或
-          <a @click.prevent="toggleMode" class="font-medium text-indigo-600 hover:text-indigo-500 cursor-pointer">
-            {{ isLogin ? '注册新账户' : '使用已有账户登录' }}
-          </a>
-        </p>
-      </div>
-      <div class="mt-8 bg-white py-8 px-4 shadow rounded-lg sm:px-10">
-        <form class="space-y-6" @submit.prevent="handleSubmit">
-          <div>
-            <label for="email" class="block text-sm font-medium text-gray-700">电子邮箱</label>
-            <div class="mt-1">
+  <div class="min-h-screen flex items-center justify-center bg-gray-100 p-4">
+    <div class="w-full max-w-md">
+      <div class="bg-white rounded-xl shadow-lg overflow-hidden">
+        <div class="p-8">
+          <div class="text-center mb-8">
+            <div class="mx-auto w-16 h-16 bg-indigo-100 rounded-full flex items-center justify-center mb-4">
+              <svg class="w-8 h-8 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path>
+              </svg>
+            </div>
+            <h1 class="text-2xl font-bold text-gray-800">
+              {{ isLogin ? '欢迎回来' : '创建新账户' }}
+            </h1>
+            <p class="text-gray-500 mt-2">
+              {{ isLogin ? '登录您的相册管理账户' : '开始整理您的照片和回忆' }}
+            </p>
+          </div>
+
+          <form class="space-y-6" @submit.prevent="handleSubmit">
+            <div>
+              <label for="email" class="block text-sm font-medium text-gray-700 mb-1">电子邮箱</label>
               <input
                   id="email"
                   name="email"
@@ -25,14 +27,13 @@
                   autocomplete="email"
                   required
                   v-model="form.email"
-                  class="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                  class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition"
+                  placeholder="your@email.com"
               >
             </div>
-          </div>
 
-          <div>
-            <label for="password" class="block text-sm font-medium text-gray-700">密码</label>
-            <div class="mt-1">
+            <div>
+              <label for="password" class="block text-sm font-medium text-gray-700 mb-1">密码</label>
               <input
                   id="password"
                   name="password"
@@ -40,47 +41,44 @@
                   autocomplete="current-password"
                   required
                   v-model="form.password"
-                  class="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                  class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition"
+                  placeholder="••••••••"
               >
             </div>
-          </div>
 
-          <div v-if="!isLogin">
-            <label for="username" class="block text-sm font-medium text-gray-700">用户名</label>
-            <div class="mt-1">
-              <input
-                  id="username"
-                  name="username"
-                  type="text"
-                  autocomplete="username"
-                  required
-                  v-model="form.username"
-                  class="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-              >
+            <div v-if="error" class="bg-red-50 text-red-700 px-4 py-3 rounded-lg">
+              {{ error }}
             </div>
-          </div>
 
-          <div v-if="error" class="text-red-500 text-sm">
-            {{ error }}
-          </div>
+            <div>
+              <button
+                  type="submit"
+                  :disabled="loading"
+                  class="w-full flex justify-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-base font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition disabled:opacity-75"
+              >
+                <span v-if="loading" class="flex items-center">
+                  <svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  </svg>
+                  处理中...
+                </span>
+                <span v-else>{{ isLogin ? '登录账户' : '创建账户' }}</span>
+              </button>
+            </div>
+          </form>
 
-          <div>
-            <button
-                type="submit"
-                :disabled="loading"
-                class="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50"
-            >
-              <span v-if="loading" class="flex items-center">
-                <svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                  <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                  <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                </svg>
-                处理中...
-              </span>
-              <span v-else>{{ isLogin ? '登录' : '注册' }}</span>
-            </button>
+          <!-- 注册按钮放在右下角 -->
+          <div class="mt-6 text-right">
+            <a @click.prevent="toggleMode" class="text-sm font-medium text-indigo-600 hover:text-indigo-500 cursor-pointer">
+              {{ isLogin ? '没有账户？立即注册' : '已有账户？立即登录' }}
+            </a>
           </div>
-        </form>
+        </div>
+
+        <div class="bg-gray-50 px-8 py-4 text-center text-sm text-gray-500">
+          &copy; 2025 在线数据管理系统
+        </div>
       </div>
     </div>
   </div>
@@ -102,8 +100,7 @@ export default {
 
     const form = ref({
       email: '',
-      password: '',
-      username: ''
+      password: ''
     })
 
     const toggleMode = () => {
@@ -122,12 +119,17 @@ export default {
             password: form.value.password
           })
         } else {
+          // 注册成功后自动登录
           await store.dispatch('register', {
             email: form.value.email,
-            password: form.value.password,
-            username: form.value.username
+            password: form.value.password
+          })
+          await store.dispatch('login', {
+            email: form.value.email,
+            password: form.value.password
           })
         }
+        // 登录成功后重定向到相册页面
         router.push('/albums')
       } catch (err) {
         error.value = isLogin.value

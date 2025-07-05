@@ -1,9 +1,19 @@
 import { createApp } from 'vue'
 import App from './App.vue'
-import router from './router'
-import store from './store/index.js'  // 添加 .js 扩展名
+import router from './router/router.js'
+import store from './store/store.js'
 
-const app = createApp(App)
-app.use(store)
-app.use(router)
-app.mount('#app')
+import './assets/tailwind.css'
+
+// 创建Vue实例前直接初始化store
+store.dispatch('initialize').then(() => {
+    console.log("create app")
+    const app = createApp(App)
+
+    app.use(store)
+    app.use(router)
+
+    app.mount('#app')
+
+    store.dispatch('initialize')
+})

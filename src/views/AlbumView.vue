@@ -17,7 +17,7 @@
 
         <div class="flex space-x-3">
           <button
-              v-if="album.permission === 'OWNER' || album.permission === 'MANAGER'"
+              v-if="album.permission === 'MANAGER' || album.permission === 'CONTRIBUTOR'"
               @click="editAlbum"
               class="bg-gray-200 hover:bg-gray-300 text-gray-700 px-4 py-2 rounded-md transition flex items-center"
           >
@@ -27,7 +27,7 @@
             编辑
           </button>
           <button
-              v-if="album.permission === 'OWNER'"
+              v-if="album.permission === 'MANAGER'"
               @click="confirmDelete"
               class="bg-red-100 hover:bg-red-200 text-red-700 px-4 py-2 rounded-md transition flex items-center"
           >
@@ -36,7 +36,9 @@
             </svg>
             删除
           </button>
+          <!-- 添加权限控制：只有所有者和管理才能共享 -->
           <button
+              v-if="album.permission === 'MANAGER' || album.permission === 'CONTRIBUTOR'"
               @click="showShareModal = true"
               class="bg-blue-100 hover:bg-blue-200 text-blue-700 px-4 py-2 rounded-md transition flex items-center"
           >
@@ -78,6 +80,15 @@
         @share="shareAlbum"
     />
 
+    <AlbumForm
+        v-if="showEditModal"
+        :initialData="album"
+        :mode="'edit'"
+        :submitText="'保存'"
+        @submit="updateAlbum"
+        @cancel="showEditModal = false"
+    />
+
     <!-- 删除确认模态框 -->
     <div v-if="showDeleteModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
       <div class="bg-white rounded-lg shadow-xl p-6 w-full max-w-md">
@@ -106,14 +117,16 @@ import { computed, onMounted, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useStore } from 'vuex'
 import ShareForm from '../components/ShareForm.vue'
+import AlbumForm from '../components/AlbumForm.vue'
 import albumApi from '@/api/album'
 
 export default {
   components: {
-    ShareForm
+    ShareForm,
+    AlbumForm
   },
   props: {
-    id: {
+    albumId: {
       type: [String, Number],
       required: true
     }
@@ -126,11 +139,14 @@ export default {
     const loading = ref(true)
     const showShareModal = ref(false)
     const showDeleteModal = ref(false)
+    const showEditModal = ref(false)
+    const saving = ref(false)
 
     onMounted(async () => {
       try {
-        const response = await albumApi.getAlbumDetail(props.id)
+        const response = await albumApi.getAlbumDetail(props.albumId)
         album.value = response.data.data
+        console.log("相册详情：",album.value)
       } catch (error) {
         console.error('获取相册详情失败', error)
       } finally {
@@ -145,7 +161,7 @@ export default {
     }
 
     const editAlbum = () => {
-      router.push(`/album/edit/${props.id}`)
+      showEditModal.value = true
     }
 
     const confirmDelete = () => {
@@ -154,8 +170,8 @@ export default {
 
     const deleteAlbum = async () => {
       try {
-        await store.dispatch('deleteAlbum', props.id)
-        router.push('/albums')
+        await store.dispatch('deleteAlbum', album.value.albumId)
+        await router.push('/albums')
       } catch (error) {
         console.error('删除相册失败', error)
       } finally {
@@ -165,11 +181,28 @@ export default {
 
     const shareAlbum = async (shareData) => {
       try {
-        await store.dispatch('shareAlbum', { id: props.id, shareData })
+        await store.dispatch('shareAlbum', { albumId: album.value.albumId, shareData })
         showShareModal.value = false
         // 显示成功消息
       } catch (error) {
         console.error('共享相册失败', error)
+      }
+    }
+
+    const updateAlbum = async (formData) => {
+      saving.value = true
+      try {
+        // 调用API更新相册
+        console.error('更新相册请求id1:', album.value.id)
+        const response = await albumApi.updateAlbum(album.value.albumId, formData)
+
+        // 更新本地数据
+        album.value = { ...album.value, ...formData }
+        showEditModal.value = false
+      } catch (error) {
+        console.error('更新相册失败', error)
+      } finally {
+        saving.value = false
       }
     }
 
@@ -180,6 +213,7 @@ export default {
       showDeleteModal,
       formatDate,
       editAlbum,
+      updateAlbum,
       confirmDelete,
       deleteAlbum,
       shareAlbum
