@@ -1,4 +1,7 @@
 import userApi from '@/api/user'
+import {useToast} from 'vue-toast-notification'
+
+const toast = useToast()
 
 export default {
     namespaced: true,
@@ -40,17 +43,41 @@ export default {
             commit('SET_INITIALIZED')
         },
         async login({ commit, dispatch }, credentials) {
-            const response = await userApi.login(credentials)
-            const token = response.data.data
-            commit('SET_TOKEN', token)
-            await dispatch('fetchUser')
+            try {
+                const response = await userApi.login(credentials);
+                if (response.data.code === 200) {
+                    const token = response.data.data;
+                    commit('SET_TOKEN', token);
+                    await dispatch('fetchUser');
+                    toast.success('登录成功');
+                    return { success: true };
+                } else {
+                    toast.error(response.data.message);
+                }
+            } catch (error) {
+                const message = error.response.data.message || '登录失败，请检查凭据';
+                toast.error(message);
+                return { success: false, message };
+            }
         },
+
         async register({ commit, dispatch }, credentials) {
-            await userApi.register(credentials)
-            await dispatch('login', {
-                email: credentials.email,
-                password: credentials.password
-            })
+            try {
+                const response = await userApi.register(credentials);
+                if (response.data.code === 200) {
+                    toast.success('注册成功');
+                    return await dispatch('login', {
+                        email: credentials.email,
+                        password: credentials.password
+                    });
+                } else {
+                    toast.error(response.data.message);
+                }
+            } catch (error) {
+                const message = error.response?.data?.message || '注册失败，邮箱可能已被使用';
+                toast.error(message);
+                return { success: false, message };
+            }
         },
         async fetchUser({ commit }) {
             const response = await userApi.getUserInfo()

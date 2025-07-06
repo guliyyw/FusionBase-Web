@@ -1,8 +1,9 @@
 <template>
-  <div v-if="album">
-    <div class="bg-white rounded-lg shadow-sm p-6 mb-6">
-      <div class="flex justify-between items-start">
-        <div>
+  <div v-if="album" class="space-y-6">
+    <!-- 相册信息卡片 -->
+    <div class="bg-white rounded-lg shadow-sm p-6">
+      <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+        <div class="flex-1">
           <h1 class="text-2xl font-bold text-gray-800">{{ album.name }}</h1>
           <p class="text-gray-600 mt-2">{{ album.description }}</p>
           <div class="flex items-center mt-4 text-sm text-gray-500">
@@ -15,9 +16,9 @@
           </div>
         </div>
 
-        <div class="flex space-x-3">
+        <div class="flex flex-wrap gap-2">
           <button
-              v-if="album.permission === 'MANAGER' || album.permission === 'CONTRIBUTOR'"
+              v-if="canEdit"
               @click="editAlbum"
               class="bg-gray-200 hover:bg-gray-300 text-gray-700 px-4 py-2 rounded-md transition flex items-center"
           >
@@ -27,7 +28,7 @@
             编辑
           </button>
           <button
-              v-if="album.permission === 'MANAGER'"
+              v-if="canManage"
               @click="confirmDelete"
               class="bg-red-100 hover:bg-red-200 text-red-700 px-4 py-2 rounded-md transition flex items-center"
           >
@@ -36,9 +37,8 @@
             </svg>
             删除
           </button>
-          <!-- 添加权限控制：只有所有者和管理才能共享 -->
           <button
-              v-if="album.permission === 'MANAGER' || album.permission === 'CONTRIBUTOR'"
+              v-if="canEdit"
               @click="showShareModal = true"
               class="bg-blue-100 hover:bg-blue-200 text-blue-700 px-4 py-2 rounded-md transition flex items-center"
           >
@@ -51,27 +51,59 @@
       </div>
     </div>
 
+    <!-- 照片列表区域 -->
     <div class="bg-white rounded-lg shadow-sm p-6">
-      <h2 class="text-xl font-semibold text-gray-800 mb-4">照片</h2>
+      <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-4">
+        <h2 class="text-xl font-semibold text-gray-800">照片</h2>
+        <button v-if="canUpload" @click="showUploadModal = true" class="mt-2 md:mt-0 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md transition flex items-center">
+          <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+          </svg>
+          上传照片
+        </button>
+      </div>
 
-      <div v-if="album.mediaCount === 0" class="text-center py-12 text-gray-500">
+      <!-- 加载状态 -->
+      <div v-if="mediaLoading" class="text-center py-12">
+        <div class="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-blue-500 mx-auto"></div>
+        <p class="mt-4 text-gray-500">加载照片中...</p>
+      </div>
+
+      <!-- 空状态 -->
+      <div v-else-if="mediaList.length === 0" class="text-center py-12 text-gray-500">
         <svg class="w-16 h-16 mx-auto text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
         </svg>
         <p class="mt-4">此相册还没有照片</p>
+        <button v-if="canUpload" @click="showUploadModal = true" class="mt-4 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md transition">
+          上传第一张照片
+        </button>
       </div>
 
+      <!-- 照片网格 -->
       <div v-else class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
-        <div v-for="i in 6" :key="i" class="aspect-square bg-gray-200 rounded-md overflow-hidden">
-          <div class="w-full h-full flex items-center justify-center text-gray-400">
-            <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
-            </svg>
+        <div v-for="media in mediaList" :key="media.mediaId" class="aspect-square bg-gray-200 rounded-md overflow-hidden relative group">
+          <img :src="getMediaUrl(media)" class="w-full h-full object-cover cursor-pointer" @click="showMedia(media)">
+
+          <!-- 媒体操作菜单 (hover时显示) -->
+          <div class="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
+            <button @click.stop="deleteMedia(media)" class="p-1 bg-red-500 text-white rounded-full hover:bg-red-600">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+              </svg>
+            </button>
+          </div>
+
+          <!-- 媒体信息 (hover时显示) -->
+          <div class="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-2 text-white opacity-0 group-hover:opacity-100 transition-opacity">
+            <p class="text-sm truncate">{{ media.filename }}</p>
+            <p class="text-xs">{{ formatFileSize(media.fileSize) }}</p>
           </div>
         </div>
       </div>
     </div>
 
+    <!-- 编辑模态框 -->
     <AlbumForm
         v-if="showEditModal"
         :initialData="album"
@@ -96,8 +128,26 @@
         </div>
       </div>
     </div>
+
+    <!-- 上传媒体模态框 -->
+    <UploadMediaModal
+        v-if="showUploadModal"
+        :albumId="album.albumId"
+        @close="showUploadModal = false"
+        @uploaded="handleMediaUploaded"
+    />
+
+    <!-- 媒体查看模态框 -->
+    <MediaViewer
+        v-if="selectedMedia"
+        :media="selectedMedia"
+        @close="selectedMedia = null"
+        @download="downloadMedia"
+        @delete="deleteMedia"
+    />
   </div>
 
+  <!-- 加载状态 -->
   <div v-else class="text-center py-12">
     <div class="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-indigo-500 mx-auto"></div>
     <p class="mt-4 text-gray-500">加载相册信息中...</p>
@@ -105,17 +155,22 @@
 </template>
 
 <script>
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { useStore } from 'vuex'
 import ShareForm from '@/components/album/ShareForm.vue'
 import AlbumForm from '@/components/album/AlbumForm.vue'
 import albumApi from '@/api/album'
+import UploadMediaModal from "@/components/media/UploadMediaModal.vue";
+import MediaViewer from "@/components/media/MediaViewer.vue";
+import mediaApi from '@/api/media'
 
 export default {
   components: {
     ShareForm,
-    AlbumForm
+    AlbumForm,
+    UploadMediaModal,
+    MediaViewer
   },
   props: {
     albumId: {
@@ -126,15 +181,27 @@ export default {
   setup(props) {
     const store = useStore()
     const router = useRouter()
+
+    // 状态管理
     const album = ref(null)
     const loading = ref(true)
     const showShareModal = ref(false)
     const showDeleteModal = ref(false)
     const showEditModal = ref(false)
     const albumData = ref({})
-    const updating = ref(false) // 添加加载状态
+    const updating = ref(false)
+    const showUploadModal = ref(false)
+    const selectedMedia = ref(null)
+    const mediaLoading = ref(false)
 
+    // 生命周期钩子
     onMounted(async () => {
+      await fetchAlbumDetail()
+      await fetchMedia()
+    })
+
+    // 获取相册详情
+    const fetchAlbumDetail = async () => {
       try {
         const response = await albumApi.getAlbumDetail(props.albumId)
         album.value = response.data.data
@@ -143,14 +210,39 @@ export default {
       } finally {
         loading.value = false
       }
-    })
+    }
 
+    // 获取媒体列表
+    const fetchMedia = async () => {
+      if (!album.value) return
+
+      mediaLoading.value = true
+      try {
+        await store.dispatch('album/fetchAlbumMedia', props.albumId)
+      } catch (error) {
+        console.error('获取媒体列表失败', error)
+      } finally {
+        mediaLoading.value = false
+      }
+    }
+
+    // 格式化日期
     const formatDate = (dateString) => {
       if (!dateString) return ''
       const date = new Date(dateString)
       return date.toLocaleDateString()
     }
 
+    // 格式化文件大小
+    const formatFileSize = (bytes) => {
+      if (bytes === 0) return '0 Bytes'
+      const k = 1024
+      const sizes = ['Bytes', 'KB', 'MB', 'GB']
+      const i = Math.floor(Math.log(bytes) / Math.log(k))
+      return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i]
+    }
+
+    // 编辑相册
     const editAlbum = () => {
       albumData.value = {
         name: album.value.name,
@@ -160,10 +252,12 @@ export default {
       showEditModal.value = true
     }
 
+    // 确认删除相册
     const confirmDelete = () => {
       showDeleteModal.value = true
     }
 
+    // 删除相册
     const deleteAlbum = async () => {
       try {
         await store.dispatch('album/deleteAlbum', album.value.albumId)
@@ -175,6 +269,7 @@ export default {
       }
     }
 
+    // 共享相册
     const shareAlbum = async (shareData) => {
       try {
         await store.dispatch('album/shareAlbum', {
@@ -187,8 +282,9 @@ export default {
       }
     }
 
+    // 更新相册
     const updateAlbum = async (formData) => {
-      updating.value = true // 开始加载
+      updating.value = true
       try {
         await store.dispatch('album/updateAlbum', {
           albumId: props.albumId,
@@ -205,9 +301,64 @@ export default {
       } catch (error) {
         console.error('更新相册信息失败', error)
       } finally {
-        updating.value = false // 结束加载
+        updating.value = false
       }
     }
+
+    // 处理媒体上传
+    const handleMediaUploaded = () => {
+      showUploadModal.value = false
+      //fetchMedia()
+    }
+
+    // 显示媒体查看器
+    const showMedia = (media) => {
+      selectedMedia.value = media
+    }
+
+    // 获取媒体URL
+    const getMediaUrl = (media) => {
+      // 实际项目中应从后端获取URL
+      return media.thumbnailUrl || media.url || 'https://via.placeholder.com/300'
+    }
+
+    // 下载媒体
+    const downloadMedia = async (media) => {
+      try {
+        await mediaApi.downloadMedia(media.mediaId, media.fileName);
+      } catch (error) {
+        console.error('下载失败', error);
+        alert('下载失败: ' + (error.message || '未知错误'));
+      }
+    }
+
+    // 删除媒体
+    const deleteMedia = async (media) => {
+      if (!confirm(`确定要删除 "${media.filename}" 吗？此操作不可撤销。`)) {
+        return
+      }
+
+      try {
+        await store.dispatch('album/deleteMedia', {
+          mediaId: media.mediaId,
+          albumId: album.value.albumId
+        })
+        fetchMedia()
+      } catch (error) {
+        console.error('删除失败', error)
+        alert('删除失败，请重试')
+      }
+    }
+
+    // 权限计算
+    const canManage = computed(() => album.value?.permission === 'MANAGER')
+    const canEdit = computed(() => ['MANAGER', 'CONTRIBUTOR'].includes(album.value?.permission))
+    const canUpload = computed(() => canEdit.value)
+
+    // 媒体列表
+    const mediaList = computed(() => {
+      return store.state.album.currentAlbumMedia || []
+    })
 
     return {
       album,
@@ -215,12 +366,27 @@ export default {
       showShareModal,
       showDeleteModal,
       showEditModal,
+      albumData,
+      updating,
+      showUploadModal,
+      selectedMedia,
+      mediaLoading,
       formatDate,
+      formatFileSize,
       editAlbum,
-      updateAlbum,
       confirmDelete,
       deleteAlbum,
-      shareAlbum
+      shareAlbum,
+      updateAlbum,
+      handleMediaUploaded,
+      showMedia,
+      getMediaUrl,
+      downloadMedia,
+      deleteMedia,
+      canManage,
+      canEdit,
+      canUpload,
+      mediaList
     }
   }
 }
