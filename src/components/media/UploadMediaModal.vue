@@ -9,16 +9,26 @@
           <div class="flex items-center justify-center w-full">
             <label class="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-gray-300 rounded-lg cursor-pointer hover:border-blue-500">
               <div class="flex flex-col items-center justify-center pt-5 pb-6">
+                <!-- 视频预览 -->
+                <div v-if="previewUrl && isVideoFile" class="relative h-20 w-full">
+                  <video :src="previewUrl" class="h-full w-full object-cover rounded"></video>
+                  <div class="absolute inset-0 flex items-center justify-center">
+                    <svg class="w-8 h-8 text-white bg-black bg-opacity-50 rounded-full p-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"></path>
+                    </svg>
+                  </div>
+                </div>
                 <svg v-if="!previewUrl" class="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path>
                 </svg>
-                <img v-else :src="previewUrl" class="h-20 object-cover rounded">
+                <img v-else-if="!isVideoFile" :src="previewUrl" class="h-20 object-cover rounded">
                 <p v-if="!previewUrl" class="text-sm text-gray-500 mt-2">
                   <span class="font-semibold">点击上传</span> 或拖放文件
                 </p>
                 <p class="text-xs text-gray-500 mt-1">{{ file?.name }}</p>
               </div>
-              <input type="file" class="hidden" @change="handleFileChange" accept="image/*">
+              <!-- 同时支持图片和视频 -->
+              <input type="file" class="hidden" @change="handleFileChange" accept="image/*,video/*">
             </label>
           </div>
         </div>
@@ -49,7 +59,7 @@
 </template>
 
 <script>
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
 import { useStore } from 'vuex'
 
 export default {
@@ -108,12 +118,17 @@ export default {
       }
     }
 
+    const isVideoFile = computed(() => {
+      return file.value?.type.startsWith('video/')
+    })
+
     return {
       file,
       previewUrl,
       filename,
       description,
       uploading,
+      isVideoFile,
       handleFileChange,
       upload
     }

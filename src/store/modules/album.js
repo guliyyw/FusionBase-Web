@@ -37,7 +37,6 @@ export default {
             if (!Array.isArray(state.currentAlbumMedia)) {
                 state.currentAlbumMedia = [];
             }
-            console.log(media)
             if (!isNaN(media.code)) {
                 return
             }

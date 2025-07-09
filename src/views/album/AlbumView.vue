@@ -83,15 +83,38 @@
       <!-- 照片网格 -->
       <div v-else class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
         <div v-for="media in mediaList" :key="media.mediaId" class="aspect-square bg-gray-200 rounded-md overflow-hidden relative group">
-          <img :src="getMediaUrl(media)" class="w-full h-full object-cover cursor-pointer" @click="showMedia(media)">
 
           <!-- 媒体操作菜单 (hover时显示) -->
-          <div class="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
-            <button @click.stop="deleteMedia(media)" class="p-1 bg-red-500 text-white rounded-full hover:bg-red-600">
+          <div class="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity z-20">
+            <button @click.stop="() => deleteMedia(media)" class="p-1 bg-red-500 text-white rounded-full hover:bg-red-600">
               <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
               </svg>
             </button>
+          </div>
+
+          <!-- 视频类型显示播放图标 -->
+          <div
+              v-if="media.fileType === 'video'"
+              class="absolute inset-0 flex items-center justify-center z-10 cursor-pointer"
+              @click="showMedia(media)"
+          >
+          <div class="bg-black bg-opacity-40 rounded-full p-2">
+            <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"></path>
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+            </svg>
+          </div>
+        </div>
+
+          <!-- 使用后端提供的缩略图 -->
+          <img :src="getMediaUrl(media)"
+               class="w-full h-full object-cover cursor-pointer"
+               @click="showMedia(media)">
+
+          <!-- 添加视频时长标签 -->
+          <div v-if="media.fileType === 'video'" class="absolute bottom-2 right-2 bg-black bg-opacity-70 text-white text-xs px-1.5 py-0.5 rounded">
+            {{ formatDuration(media.duration) }}
           </div>
 
           <!-- 媒体信息 (hover时显示) -->
@@ -233,6 +256,14 @@ export default {
       return date.toLocaleDateString()
     }
 
+    const formatDuration = (millis) => {
+      if (!millis) return '00:00'
+      const seconds = Math.floor(millis / 1000)
+      const mins = Math.floor(seconds / 60)
+      const secs = Math.floor(seconds % 60)
+      return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`
+    }
+
     // 格式化文件大小
     const formatFileSize = (bytes) => {
       if (bytes === 0) return '0 Bytes'
@@ -308,7 +339,7 @@ export default {
     // 处理媒体上传
     const handleMediaUploaded = () => {
       showUploadModal.value = false
-      //fetchMedia()
+      fetchAlbumDetail()
     }
 
     // 显示媒体查看器
@@ -373,6 +404,7 @@ export default {
       mediaLoading,
       formatDate,
       formatFileSize,
+      formatDuration,
       editAlbum,
       confirmDelete,
       deleteAlbum,
