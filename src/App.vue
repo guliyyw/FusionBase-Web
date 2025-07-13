@@ -2,7 +2,7 @@
 
   <router-view v-if="$route.path === '/login'"></router-view>
 
-  <div class="min-h-screen bg-gray-50 flex">
+  <div v-else class="min-h-screen bg-gray-50 flex">
     <!-- 左侧导航栏 -->
     <div class="w-64 bg-white shadow-md flex flex-col fixed h-full">
       <div class="p-4 border-b">

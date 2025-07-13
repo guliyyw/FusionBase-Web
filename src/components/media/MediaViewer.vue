@@ -46,7 +46,7 @@
               </svg>
               下载
             </button>
-            <button v-if="canDelete" @click="$emit('delete', media)"
+            <button v-if="canDelete" @click="showDeleteConfirm = true"
                     class="px-4 py-2 bg-red-600 hover:bg-red-700 rounded-md flex items-center">
               <svg class="w-5 h-5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
@@ -56,8 +56,19 @@
           </div>
         </div>
 
-        <div v-if="media.description" class="mt-3 border-t border-gray-700 pt-3">
-          <p class="text-gray-300">{{ media.description }}</p>
+        <div v-if="showDeleteConfirm" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div class="bg-white rounded-lg shadow-xl p-6 w-full max-w-md">
+            <h3 class="text-lg font-medium text-gray-900 mb-4">确认删除媒体</h3>
+            <p class="text-gray-500 mb-6">确定要删除 "{{ media.fileName }}" 吗？此操作将永久删除该文件，无法撤销。</p>
+            <div class="flex justify-end space-x-3">
+              <button @click="showDeleteConfirm = false" class="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50">
+                取消
+              </button>
+              <button @click="confirmDeleteMedia" class="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700">
+                删除
+              </button>
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -82,6 +93,7 @@ export default {
     const currentTime = ref(0)
     const duration = ref(0)
     const isFullscreen = ref(false)
+    const showDeleteConfirm = ref(false)
 
     // 格式化时间 (秒 -> mm:ss)
     const formatTime = (seconds) => {
@@ -185,6 +197,11 @@ export default {
       return true
     })
 
+    const confirmDeleteMedia = () => {
+      emit('delete', props.media)
+      showDeleteConfirm.value = false
+    }
+
     watch(playing, (newVal) => {
       if (videoPlayer.value) {
         if (newVal) {
@@ -284,6 +301,8 @@ export default {
       setVolume,
       seekVideo,
       toggleFullscreen,
+      showDeleteConfirm,
+      confirmDeleteMedia,
       handleVideoLoaded
     }
   }

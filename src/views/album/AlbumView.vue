@@ -59,7 +59,7 @@
           <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
           </svg>
-          上传照片
+          上传照片或视频
         </button>
       </div>
 
@@ -86,7 +86,7 @@
 
           <!-- 媒体操作菜单 (hover时显示) -->
           <div class="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity z-20">
-            <button @click.stop="() => deleteMedia(media)" class="p-1 bg-red-500 text-white rounded-full hover:bg-red-600">
+            <button @click.stop="showDeleteMediaConfirm(media)" class="p-1 bg-red-500 text-white rounded-full hover:bg-red-600">
               <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
               </svg>
@@ -168,6 +168,21 @@
         @download="downloadMedia"
         @delete="deleteMedia"
     />
+
+    <div v-if="mediaToDelete" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+      <div class="bg-white rounded-lg shadow-xl p-6 w-full max-w-md">
+        <h3 class="text-lg font-medium text-gray-900 mb-4">确认删除媒体</h3>
+        <p class="text-gray-500 mb-6">确定要删除 "{{ mediaToDelete.fileName }}" 吗？此操作将永久删除该文件，无法撤销。</p>
+        <div class="flex justify-end space-x-3">
+          <button @click="mediaToDelete = null" class="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50">
+            取消
+          </button>
+          <button @click="confirmDeleteMedia" class="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700">
+            删除
+          </button>
+        </div>
+      </div>
+    </div>
   </div>
 
   <!-- 加载状态 -->
@@ -216,6 +231,7 @@ export default {
     const showUploadModal = ref(false)
     const selectedMedia = ref(null)
     const mediaLoading = ref(false)
+    const mediaToDelete = ref(null)
 
     // 生命周期钩子
     onMounted(async () => {
@@ -391,6 +407,27 @@ export default {
       return store.state.album.currentAlbumMedia || []
     })
 
+    const showDeleteMediaConfirm = (media) => {
+      mediaToDelete.value = media
+    }
+
+    const confirmDeleteMedia = async () => {
+      if (!mediaToDelete.value) return
+
+      try {
+        await store.dispatch('album/deleteMedia', {
+          mediaId: mediaToDelete.value.mediaId,
+          albumId: album.value.albumId
+        })
+        fetchMedia()
+      } catch (error) {
+        console.error('删除失败', error)
+        alert('删除失败，请重试')
+      } finally {
+        mediaToDelete.value = null
+      }
+    }
+
     return {
       album,
       loading,
@@ -418,7 +455,10 @@ export default {
       canManage,
       canEdit,
       canUpload,
-      mediaList
+      mediaList,
+      mediaToDelete,
+      showDeleteMediaConfirm,
+      confirmDeleteMedia
     }
   }
 }

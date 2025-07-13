@@ -3,8 +3,8 @@ import axios from 'axios'
 import store from '@/store'
 import { useToast } from 'vue-toast-notification'
 
-const API_URL = 'http://127.0.0.1:8081'
 
+const API_URL = import.meta.env.API_URL
 const toast = useToast()
 
 const apiClient = axios.create({
@@ -78,9 +78,6 @@ apiClient.interceptors.response.use(
 // 创建专门的文件上传客户端
 export const fileUploadClient = axios.create({
     baseURL: API_URL,
-    headers: {
-        'Content-Type': 'multipart/form-data'
-    }
 })
 
 // 文件上传拦截器 - 添加认证

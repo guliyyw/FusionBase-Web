@@ -2,14 +2,16 @@ import apiClient, { fileUploadClient, downloadFile } from './apiClient'
 
 export default {
     // 上传媒体文件
-    uploadMedia(albumId, file, dto) {
+    uploadMedia(albumId, file, onUploadProgress) {
         const formData = new FormData()
         formData.append('file', file)
-        formData.append('dto', new Blob([JSON.stringify(dto)], {
-            type: 'application/json'
-        }))
 
-        return fileUploadClient.post(`/media/upload/${albumId}`, formData)
+        return fileUploadClient.post(`/media/upload/${albumId}`, formData, {
+            onUploadProgress,
+            headers: {
+                'Content-Type': 'multipart/form-data'  // 明确设置内容类型
+            }
+        })
     },
 
     // 下载媒体文件

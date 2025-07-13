@@ -90,8 +90,8 @@ export default {
             return response;
         },
 
-        async uploadMedia({ commit }, { albumId, file, dto }) {
-            const response = await mediaApi.uploadMedia(albumId, file, dto);
+        async uploadMedia({ commit }, { albumId, file }) {
+            const response = await mediaApi.uploadMedia(albumId, file);
             commit('ADD_MEDIA', response.data);
             return response;
         },
